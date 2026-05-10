@@ -1,0 +1,20 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(auth)/register/page": "app/(auth)/register/page.js",
+  "/(dashboard)/dashboard/events/[id]/page": "app/(dashboard)/dashboard/events/[id]/page.js",
+  "/(dashboard)/dashboard/contacts/page": "app/(dashboard)/dashboard/contacts/page.js",
+  "/(dashboard)/dashboard/events/new/page": "app/(dashboard)/dashboard/events/new/page.js",
+  "/(dashboard)/dashboard/files/page": "app/(dashboard)/dashboard/files/page.js",
+  "/(dashboard)/dashboard/calendar/page": "app/(dashboard)/dashboard/calendar/page.js",
+  "/(dashboard)/dashboard/notifications/page": "app/(dashboard)/dashboard/notifications/page.js",
+  "/(dashboard)/dashboard/events/page": "app/(dashboard)/dashboard/events/page.js",
+  "/(dashboard)/dashboard/guide/page": "app/(dashboard)/dashboard/guide/page.js",
+  "/(dashboard)/dashboard/profile/page": "app/(dashboard)/dashboard/profile/page.js",
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/dashboard/settings/page": "app/(dashboard)/dashboard/settings/page.js",
+  "/(dashboard)/dashboard/suppliers/page": "app/(dashboard)/dashboard/suppliers/page.js",
+  "/(dashboard)/dashboard/tasks/page": "app/(dashboard)/dashboard/tasks/page.js",
+  "/(dashboard)/dashboard/events/[id]/edit/page": "app/(dashboard)/dashboard/events/[id]/edit/page.js"
+}
