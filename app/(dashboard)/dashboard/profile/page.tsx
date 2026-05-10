@@ -79,7 +79,7 @@ export default function ProfilePage() {
                 .getPublicUrl(filePath);
 
             // Update Profile
-            const { error: updateError } = await supabase
+            const { error: updateError } = await (supabase as any)
                 .from('profiles')
                 .update({ avatar_url: publicUrl })
                 .eq('id', user.id);
@@ -106,7 +106,7 @@ export default function ProfilePage() {
         if (!user || !editName.trim()) return;
         setIsSaving(true);
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('profiles')
                 .update({ full_name: editName.trim() })
                 .eq('id', user.id);

@@ -27,7 +27,7 @@ export default function SettingsPage() {
 
             try {
                 // Fetch Team (needs to select invite_code)
-                const { data: teamData } = await supabase
+                const { data: teamData } = await (supabase as any)
                     .from('teams')
                     .select('*')
                     .eq('id', profile.team_id)
@@ -36,7 +36,7 @@ export default function SettingsPage() {
                 if (teamData) setTeam(teamData as Team);
 
                 // Fetch Members
-                const { data: membersData } = await supabase
+                const { data: membersData } = await (supabase as any)
                     .from('profiles')
                     .select('*')
                     .eq('team_id', profile.team_id as string)
@@ -65,7 +65,7 @@ export default function SettingsPage() {
         if (!confirm("Voulez-vous vraiment retirer ce membre de l'équipe ?")) return;
 
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('profiles')
                 .update({ team_id: null, role: 'membre' })
                 .eq('id', memberId);

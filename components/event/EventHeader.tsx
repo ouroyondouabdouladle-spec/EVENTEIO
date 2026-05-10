@@ -47,7 +47,7 @@ export default function EventHeader({ event }: EventHeaderProps) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, created_at, share_token, ...rest } = event;
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('events')
             .insert({
                 ...rest,
@@ -70,7 +70,7 @@ export default function EventHeader({ event }: EventHeaderProps) {
         if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet événement ?")) return;
         
         const supabase = createClient();
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('events')
             .delete()
             .eq('id', event.id);

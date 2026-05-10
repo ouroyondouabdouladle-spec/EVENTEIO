@@ -95,12 +95,12 @@ export default function EventForm({ eventId }: EventFormProps) {
         if (!eventId) return;
 
         const supabase = createClient();
-        supabase
+        (supabase as any)
             .from('events')
             .select('*')
             .eq('id', eventId)
             .single()
-            .then(({ data, error }) => {
+            .then(({ data, error }: { data: any, error: any }) => {
                 if (!error && data) {
                     reset({
                         title: data.title,
@@ -180,13 +180,13 @@ export default function EventForm({ eventId }: EventFormProps) {
 
         try {
             if (eventId) {
-                const { error } = await supabase
+                const { error } = await (supabase as any)
                     .from('events')
                     .update(payload)
                     .eq('id', eventId);
                 if (error) throw error;
             } else {
-                const { data, error } = await supabase
+                const { data, error } = await (supabase as any)
                     .from('events')
                     .insert(payload)
                     .select('id')
@@ -195,7 +195,7 @@ export default function EventForm({ eventId }: EventFormProps) {
                 savedId = data.id;
             }
 
-            await supabase.from('activity_logs').insert({
+            await (supabase as any).from('activity_logs').insert({
                 event_id: savedId!,
                 user_id: profile.id,
                 action: eventId ? 'event_updated' : 'event_created',
@@ -217,7 +217,7 @@ export default function EventForm({ eventId }: EventFormProps) {
         const supabase = createClient();
         
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('events')
                 .delete()
                 .eq('id', eventId);
