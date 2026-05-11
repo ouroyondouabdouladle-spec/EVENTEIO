@@ -27,7 +27,7 @@ export default function TabContacts({ eventId }: TabContactsProps) {
 
     const fetchContacts = async () => {
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('contacts')
             .select('*')
             .eq('event_id', eventId)
@@ -42,7 +42,7 @@ export default function TabContacts({ eventId }: TabContactsProps) {
         if (!newName.trim()) return;
 
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('contacts')
             .insert({
                 event_id: eventId,
@@ -50,7 +50,7 @@ export default function TabContacts({ eventId }: TabContactsProps) {
                 role: newRole.trim() || 'Contact',
                 phone: newPhone.trim(),
                 email: newEmail.trim()
-            })
+            } as any)
             .select()
             .single();
 
@@ -63,7 +63,7 @@ export default function TabContacts({ eventId }: TabContactsProps) {
     const deleteContact = async (id: string) => {
         if (!window.confirm("Supprimer ce contact ?")) return;
         const supabase = createClient();
-        const { error } = await supabase.from('contacts').delete().eq('id', id);
+        const { error } = await (supabase as any).from('contacts').delete().eq('id', id);
         if (!error) {
             setContacts(contacts.filter(c => c.id !== id));
         }

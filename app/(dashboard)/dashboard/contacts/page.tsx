@@ -31,7 +31,7 @@ export default function GlobalContactsPage() {
 
             const eventIds = events.map((e: any) => e.id);
 
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('contacts')
                 .select('*, events(*)')
                 .in('event_id', eventIds)

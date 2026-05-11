@@ -67,7 +67,7 @@ export default function TabSuppliers({ eventId }: TabSuppliersProps) {
         if (!newName.trim()) return;
 
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('suppliers')
             .insert({
                 event_id: eventId,
@@ -89,7 +89,7 @@ export default function TabSuppliers({ eventId }: TabSuppliersProps) {
     const deleteSupplier = async (id: string) => {
         if (!window.confirm("Supprimer ce prestataire ?")) return;
         const supabase = createClient();
-        const { error } = await supabase.from('suppliers').delete().eq('id', id);
+        const { error } = await (supabase as any).from('suppliers').delete().eq('id', id);
         if (!error) {
             setSuppliers(suppliers.filter(s => s.id !== id));
         }

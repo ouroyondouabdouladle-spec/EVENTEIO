@@ -45,7 +45,7 @@ export default function TabTasks({ eventId }: TabTasksProps) {
     const toggleStatus = async (task: Task) => {
         const nextStatus = task.status === 'termine' ? 'a_faire' : 'termine';
         const supabase = createClient();
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('tasks')
             .update({ status: nextStatus })
             .eq('id', task.id);
@@ -60,7 +60,7 @@ export default function TabTasks({ eventId }: TabTasksProps) {
         if (!newTaskTitle.trim()) return;
 
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('tasks')
             .insert({
                 event_id: eventId,
