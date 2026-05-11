@@ -3,14 +3,12 @@
   "devCommand": "next dev",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "env": [
-    {
-      "key": "NEXT_PUBLIC_SUPABASE_URL",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
       "description": "Your Supabase project URL"
     },
-    {
-      "key": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
       "description": "Your Supabase anonymous key"
     }
-  ]
+  }
 }
