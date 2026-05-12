@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase';
-import type { Document } from '@/types/database';
+import type { EventDocument } from '@/types/database';
 import { 
     ChevronRight, Folder, FileText, ChevronLeft, Plus, 
     Search, X, Trash2, ExternalLink, Link as LinkIcon, 
@@ -24,7 +24,7 @@ const FOLDER_CONFIG: Record<FolderType, { label: string; color: string; bg: stri
 };
 
 export default function TabDocuments({ eventId }: TabDocumentsProps) {
-    const [docs, setDocs] = useState<Document[]>([]);
+    const [docs, setDocs] = useState<EventDocument[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFolder, setSelectedFolder] = useState<FolderType | null>(null);
     const [isAdding, setIsAdding] = useState(false);
@@ -44,7 +44,7 @@ export default function TabDocuments({ eventId }: TabDocumentsProps) {
 
     const fetchDocs = async () => {
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('documents')
             .select('*')
             .eq('event_id', eventId)
@@ -82,7 +82,7 @@ export default function TabDocuments({ eventId }: TabDocumentsProps) {
                 .getPublicUrl(fileName);
 
             // 4. Sauvegarder dans la base de données
-            const { data, error: dbError } = await supabase
+            const { data, error: dbError } = await (supabase as any)
                 .from('documents')
                 .insert({
                     event_id: eventId,
@@ -107,7 +107,7 @@ export default function TabDocuments({ eventId }: TabDocumentsProps) {
         }
     };
 
-    const deleteDoc = async (doc: Document) => {
+    const deleteDoc = async (doc: EventDocument) => {
         if (!window.confirm("Supprimer définitivement ce fichier ?")) return;
         
         const supabase = createClient();
@@ -122,7 +122,7 @@ export default function TabDocuments({ eventId }: TabDocumentsProps) {
         }
 
         // 2. Supprimer la ligne en base de données
-        const { error } = await supabase.from('documents').delete().eq('id', doc.id);
+        const { error } = await (supabase as any).from('documents').delete().eq('id', doc.id);
         if (!error) {
             setDocs(docs.filter(d => d.id !== doc.id));
         }
@@ -136,7 +136,7 @@ export default function TabDocuments({ eventId }: TabDocumentsProps) {
     };
 
     const folders = useMemo(() => {
-        const categories: Record<FolderType, Document[]> = {
+        const categories: Record<FolderType, EventDocument[]> = {
             contrats: [], devis: [], plans: [], photos: [], autres: []
         };
         docs.forEach(doc => {

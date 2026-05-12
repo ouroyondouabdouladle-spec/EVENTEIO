@@ -112,7 +112,7 @@ export interface Contact {
     created_at: string;
 }
 
-export interface Document {
+export interface EventDocument {
     id: string;
     event_id: string;
     name: string;
@@ -182,9 +182,9 @@ export interface Database {
                 Update: Partial<Omit<Contact, 'id'>>;
             };
             documents: {
-                Row: Document;
-                Insert: Omit<Document, 'id' | 'created_at'> & { id?: string; created_at?: string };
-                Update: Partial<Omit<Document, 'id'>>;
+                Row: EventDocument;
+                Insert: Omit<EventDocument, 'id' | 'created_at'> & { id?: string; created_at?: string };
+                Update: Partial<Omit<EventDocument, 'id'>>;
             };
             activity_logs: {
                 Row: ActivityLog;

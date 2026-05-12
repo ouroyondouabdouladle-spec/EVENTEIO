@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useUser } from '@/lib/hooks/useUser';
-import type { Document, Event } from '@/types/database';
+import type { EventDocument, Event } from '@/types/database';
 import { 
     Search, ChevronRight, FileText, Folder, Calendar, 
     ExternalLink, FileCheck, FileCode, Image as ImageIcon 
@@ -22,7 +22,7 @@ const FOLDER_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 export default function GlobalFilesPage() {
     const { profile } = useUser();
-    const [docs, setDocs] = useState<(Document & { events: Event })[]>([]);
+    const [docs, setDocs] = useState<(EventDocument & { events: Event })[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 

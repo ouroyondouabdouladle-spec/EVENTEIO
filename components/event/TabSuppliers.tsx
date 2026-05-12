@@ -6,7 +6,7 @@ import type { Supplier, SupplierStatus } from '@/types/database';
 import {
     Search, Phone, Mail, ChevronRight, Plus, Music, Utensils, 
     Camera, Sparkles, Shield, Flower2, Wine, Heart, 
-    DollarSign, X, Trash2, ExternalLink, Instagram, Briefcase,
+    DollarSign, X, Trash2, ExternalLink, Briefcase,
     MoreHorizontal
 } from 'lucide-react';
 
