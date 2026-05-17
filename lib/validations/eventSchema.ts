@@ -7,13 +7,10 @@ import { z } from 'zod';
 export const eventSchema = z.object({
     // ---- Section 1 : Informations événement ----
     title: z.string().min(1, 'Le titre est obligatoire'),
-    date_start: z.string().nullable().optional(),
-    date_end: z.string().nullable().optional(),
+    event_date: z.string().nullable().optional(),
+    event_time: z.string().nullable().optional(),
     location: z.string().nullable().optional(),
-    type: z
-        .enum(['Mariage', 'Anniversaire', 'Soirée entreprise', 'Conférence', 'Autre'])
-        .nullable()
-        .optional(),
+    type: z.string().nullable().optional(),
     status: z.enum(['non_valide', 'en_attente', 'valide', 'termine']).default('non_valide'),
 
     // ---- Section 2 : Client Monsieur ----

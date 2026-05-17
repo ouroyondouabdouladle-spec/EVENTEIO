@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Search, Plus, MapPin, Calendar, Users, ChevronRight, Filter, AlertCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
@@ -22,6 +22,16 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState<FilterValue>('all');
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const [showSearchBar, setShowSearchBar] = useState(false);
+
+    // Détecter si on provient d'un clic de loupe (Dashboard ou autre page)
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.search.includes('search=true')) {
+            setShowSearchBar(true);
+            setTimeout(() => searchInputRef.current?.focus(), 300);
+        }
+    }, []);
 
     // Chargement des événements depuis Supabase
     useEffect(() => {
@@ -43,15 +53,22 @@ export default function EventsPage() {
             });
     }, [profile?.team_id]);
 
-    // Filtrage côté client
+    // Filtrage côté client robuste et étendu
     const filtered = useMemo(() => {
         const q = search.toLowerCase().trim();
         return events.filter((ev) => {
             const matchSearch =
                 !q ||
-                ev.title.toLowerCase().includes(q) ||
+                (ev.title ?? '').toLowerCase().includes(q) ||
                 (ev.location ?? '').toLowerCase().includes(q) ||
-                (ev.type ?? '').toLowerCase().includes(q);
+                (ev.type ?? '').toLowerCase().includes(q) ||
+                (ev.client_monsieur_nom ?? '').toLowerCase().includes(q) ||
+                (ev.client_monsieur_prenom ?? '').toLowerCase().includes(q) ||
+                (ev.client_madame_nom ?? '').toLowerCase().includes(q) ||
+                (ev.client_madame_prenom ?? '').toLowerCase().includes(q) ||
+                (ev.client_monsieur_email ?? '').toLowerCase().includes(q) ||
+                (ev.client_madame_email ?? '').toLowerCase().includes(q) ||
+                (FILTER_LABELS[ev.status as FilterValue] ?? '').toLowerCase().includes(q);
 
             const matchFilter = filter === 'all' || ev.status === filter;
 
@@ -64,29 +81,50 @@ export default function EventsPage() {
     return (
         <main className="p-6 animate-fade-in pb-32">
             {/* Header */}
-            <header className="flex flex-col gap-6 mb-8">
-                <div className="flex items-center justify-between">
+            <header className="mb-8">
+                <div className="flex items-center justify-between mb-4">
                     <div>
                         <h1 className="text-3xl font-extrabold tracking-tight">Événements</h1>
                         <p className="text-muted text-sm font-medium">
                             {loading ? 'Chargement...' : `${events.length} projet${events.length > 1 ? 's' : ''} au total`}
                         </p>
                     </div>
-                    <button className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center text-muted hover:text-white transition-all shadow-sm">
+                    <button 
+                        onClick={() => {
+                            if (!showSearchBar) {
+                                setShowSearchBar(true);
+                                setTimeout(() => searchInputRef.current?.focus(), 150);
+                            } else {
+                                setShowSearchBar(false);
+                                setSearch('');
+                            }
+                        }}
+                        className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all shadow-sm active:scale-95 ${
+                            showSearchBar 
+                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                                : 'bg-surface border-border text-muted hover:text-white'
+                        }`}
+                        title="Rechercher"
+                    >
                         <Search size={22} />
                     </button>
                 </div>
 
                 {/* Search Bar */}
-                <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors" size={18} />
-                    <input 
-                        type="text"
-                        placeholder="Rechercher un événement..."
-                        className="input-premium pl-12 py-3.5"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                    showSearchBar ? 'max-h-20 opacity-100 mt-4' : 'max-h-0 opacity-0 pointer-events-none'
+                }`}>
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors" size={18} />
+                        <input 
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="Rechercher un événement, un client, un e-mail..."
+                            className="input-premium pl-12 py-3.5"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
                 </div>
             </header>
 

@@ -166,7 +166,9 @@ export default function CalendarPage() {
                             <div className="flex-1">
                                 <h4 className="font-bold text-sm mb-1">{event.title}</h4>
                                 <p className="text-xs text-muted font-medium">
-                                    {event.date_start ? new Date(event.date_start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--'} • {event.type || 'Événement'}
+                                    {event.date_start && (new Date(event.date_start).getHours() !== 0 || new Date(event.date_start).getMinutes() !== 0) ? 
+                                        `${new Date(event.date_start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} • ` : ''}
+                                    {event.type || 'Événement'}
                                 </p>
                             </div>
                             <button className="text-muted hover:text-white transition-colors">

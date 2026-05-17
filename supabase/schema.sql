@@ -182,10 +182,23 @@ CREATE POLICY "Users can insert their own profile"
     ON public.profiles FOR INSERT WITH CHECK (id = auth.uid());
 CREATE POLICY "Users can update their own profile" 
     ON public.profiles FOR UPDATE USING (id = auth.uid());
+CREATE POLICY "Admins can update profiles in their team" 
+    ON public.profiles FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = auth.uid() AND p.role = 'admin' AND p.team_id = public.profiles.team_id
+        )
+    );
 
 -- Politiques: Events
 CREATE POLICY "Team members can perform all actions on their events" 
     ON public.events FOR ALL USING (team_id = get_user_team());
+
+CREATE POLICY "Anyone can view events with a valid share_token"
+    ON public.events FOR SELECT USING (share_token IS NOT NULL);
+
+CREATE POLICY "Anyone can update signatures of events with a valid share_token"
+    ON public.events FOR UPDATE USING (share_token IS NOT NULL) WITH CHECK (share_token IS NOT NULL);
 
 -- Politiques: Tasks
 CREATE POLICY "Team members can perform all actions on their tasks" 

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { Event } from '@/types/database';
+import { generateEventPDF } from '@/lib/pdf';
 import { 
     Phone, Mail, MapPin, Camera, ChevronRight, 
     Info, CreditCard, FileText, Wallet 
@@ -164,6 +165,22 @@ export default function TabDetails({ event }: TabDetailsProps) {
                     </div>
                 </div>
             )}
+
+            {/* PDF Generation Action Card */}
+            <div className="mb-10 card-premium p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-primary/20 bg-primary/5 hover:border-primary/40 transition-all">
+                <div className="flex-1">
+                    <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+                        <span>📄 Fiche Synthèse PDF</span>
+                    </h4>
+                    <p className="text-xs text-muted font-medium">Téléchargez ou imprimez le contrat et le bilan financier du projet.</p>
+                </div>
+                <button
+                    onClick={() => generateEventPDF(event)}
+                    className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/80 transition-colors flex items-center justify-center gap-2 text-xs font-bold text-white flex-shrink-0"
+                >
+                    Générer le PDF
+                </button>
+            </div>
 
             {/* Floating Edit Button */}
             <div className="fixed bottom-24 left-0 right-0 px-6 z-40 pointer-events-none">

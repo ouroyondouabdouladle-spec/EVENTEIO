@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import { useUser } from '@/lib/hooks/useUser';
-import type { Profile, Team } from '@/types/database';
+import type { Profile, Team, UserRole } from '@/types/database';
 import { ChevronLeft, Users, Key, Copy, Check, Trash2, ShieldAlert } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -80,6 +80,23 @@ export default function SettingsPage() {
         }
     };
 
+    const handleChangeRole = async (memberId: string, newRole: UserRole) => {
+        try {
+            const { error } = await (supabase as any)
+                .from('profiles')
+                .update({ role: newRole })
+                .eq('id', memberId);
+
+            if (error) throw error;
+            
+            // Mettre à jour la liste locale
+            setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
+        } catch (error) {
+            console.error("Erreur lors de la modification du rôle", error);
+            alert("Erreur lors de la modification de l'autorisation.");
+        }
+    };
+
     if (loading) return null;
 
     return (
@@ -150,29 +167,61 @@ export default function SettingsPage() {
                                 <div className="flex-1">
                                     <p className="text-sm font-bold flex items-center gap-2">
                                         {member.full_name || 'Utilisateur'}
-                                        {member.role === 'admin' && (
-                                            <span className="text-[9px] uppercase tracking-wider bg-primary/20 text-primary px-2 py-0.5 rounded-full font-black">
-                                                Admin
-                                            </span>
-                                        )}
                                     </p>
                                     <p className="text-[11px] text-muted font-medium truncate">
                                         Membre depuis le {new Date(member.created_at).toLocaleDateString()}
                                     </p>
                                 </div>
                                 
-                                {/* Bouton Kick (Admin Seulement) */}
-                                {isAdmin && member.id !== profile?.id && (
-                                    <button 
-                                        onClick={() => handleKickMember(member.id)}
-                                        className="w-10 h-10 rounded-xl hover:bg-red-500/10 text-muted hover:text-red-500 transition-colors flex items-center justify-center"
-                                        title="Retirer de l'équipe"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                {/* Sélecteur de rôle et bouton Kick (Admin Seulement) */}
+                                {isAdmin && member.id !== profile?.id ? (
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={member.role}
+                                            onChange={(e) => handleChangeRole(member.id, e.target.value as UserRole)}
+                                            className="text-xs bg-surface border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-primary/50 cursor-pointer font-bold"
+                                        >
+                                            <option value="membre">Membre</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                        <button 
+                                            onClick={() => handleKickMember(member.id)}
+                                            className="w-10 h-10 rounded-xl hover:bg-red-500/10 text-muted hover:text-red-500 transition-colors flex items-center justify-center flex-shrink-0"
+                                            title="Retirer de l'équipe"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    member.role === 'admin' && (
+                                        <span className="text-[9px] uppercase tracking-wider bg-primary/20 text-primary px-3 py-1 rounded-full font-black">
+                                            Admin
+                                        </span>
+                                    )
                                 )}
                             </div>
                         ))}
+                    </div>
+                </section>
+
+                {/* Sauvegarde & Sécurité */}
+                <section>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted mb-4 px-4 opacity-40">
+                        Sauvegarde & Données
+                    </h3>
+                    <div className="card-premium p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex-1">
+                            <h4 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+                                <span>📦 Sauvegarde & Export de Données</span>
+                            </h4>
+                            <p className="text-xs text-muted font-medium">Exportez toutes les données de votre équipe (projets, tâches, prestataires) ou restaurez une sauvegarde précédente.</p>
+                        </div>
+                        <button
+                            onClick={() => router.push('/dashboard/settings/backup')}
+                            className="h-11 px-5 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-xs font-bold text-white flex-shrink-0"
+                        >
+                            Gérer les sauvegardes
+                        </button>
                     </div>
                 </section>
             </div>

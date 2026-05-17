@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Share2, Copy, Trash2, MoreHorizontal, Check, Edit3 } from 'lucide-react';
+import { Share2, Copy, Trash2, MoreHorizontal, Check, Edit3, FileText } from 'lucide-react';
+import { generateEventPDF } from '@/lib/pdf';
 import { createClient } from '@/lib/supabase';
 import type { Event } from '@/types/database';
 import StatusBadge from '@/components/StatusBadge';
@@ -16,24 +17,28 @@ export default function EventHeader({ event }: EventHeaderProps) {
     const router = useRouter();
     const [showMenu, setShowMenu] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     const formatDate = (iso: string | null) => {
         if (!iso) return '';
-        return new Intl.DateTimeFormat('fr-FR', {
+        const d = new Date(iso);
+        const options: Intl.DateTimeFormatOptions = {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(new Date(iso));
+        };
+        
+        if (d.getHours() !== 0 || d.getMinutes() !== 0) {
+            options.hour = '2-digit';
+            options.minute = '2-digit';
+        }
+        
+        return new Intl.DateTimeFormat('fr-FR', options).format(d);
     };
 
-    const handleShare = async () => {
-        const shareUrl = `${window.location.origin}/share/${event.share_token}`;
-        await navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleShare = () => {
+        setShowShareModal(true);
         setShowMenu(false);
     };
 
@@ -139,6 +144,16 @@ export default function EventHeader({ event }: EventHeaderProps) {
                                         {copied ? 'Copié !' : 'Partager le projet'}
                                     </button>
                                     <button 
+                                        onClick={() => {
+                                            generateEventPDF(event);
+                                            setShowMenu(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 text-white text-xs font-bold transition-colors"
+                                    >
+                                        <FileText size={16} />
+                                        Générer la Fiche PDF
+                                    </button>
+                                    <button 
                                         onClick={handleDuplicate}
                                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 text-white text-xs font-bold transition-colors"
                                     >
@@ -195,6 +210,107 @@ export default function EventHeader({ event }: EventHeaderProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Share Modal */}
+            {showShareModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in no-print">
+                    <div className="w-full max-w-md bg-[#121214] border border-white/10 rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                                    <span>🔗 Partager avec le client</span>
+                                </h3>
+                                <p className="text-xs text-muted font-medium mt-1">Transmettez ce lien sécurisé pour la consultation et la signature.</p>
+                            </div>
+                            <button 
+                                onClick={() => setShowShareModal(false)}
+                                className="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-muted hover:text-white transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Link Container */}
+                        <div className="mb-6">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted block mb-2 px-1">Lien de signature unique</span>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    readOnly 
+                                    value={typeof window !== 'undefined' ? `${window.location.origin}/share/${event.share_token}` : ''}
+                                    className="input-premium py-3 text-xs font-semibold flex-1 min-w-0 bg-[#161618] border-white/5"
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (typeof window === 'undefined') return;
+                                        const shareUrl = `${window.location.origin}/share/${event.share_token}`;
+                                        await navigator.clipboard.writeText(shareUrl);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 2000);
+                                    }}
+                                    className={`h-11 px-4 rounded-xl flex items-center justify-center font-bold text-xs transition-all active:scale-95 border ${
+                                        copied 
+                                            ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                                            : 'bg-primary border-primary text-white hover:bg-primary/80'
+                                    }`}
+                                >
+                                    {copied ? <Check size={16} /> : 'Copier'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Quick Actions Grid */}
+                        <div className="space-y-3 mb-6">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted block px-1">Partager directement</span>
+                            
+                            {/* Email Option */}
+                            <a
+                                href={typeof window !== 'undefined' ? `mailto:${[event.client_monsieur_email, event.client_madame_email].filter(Boolean).join(',') || ''}?subject=${encodeURIComponent(`Votre contrat d'événement : ${event.title}`)}&body=${encodeURIComponent(
+                                    `Bonjour,\n\nVoici le lien sécurisé pour consulter et signer en ligne votre contrat de prestation pour l'événement "${event.title}" :\n\n${window.location.origin}/share/${event.share_token}\n\nÀ très bientôt,\nL'équipe EVENTIO`
+                                )}` : '#'}
+                                className="flex items-center gap-4 p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors text-left"
+                            >
+                                <span className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center flex-shrink-0 text-lg">
+                                    📬
+                                </span>
+                                <div>
+                                    <h4 className="text-xs font-black text-white">Envoyer par E-mail</h4>
+                                    <p className="text-[10px] text-muted font-medium mt-0.5">Pré-remplit un e-mail destiné à vos clients.</p>
+                                </div>
+                            </a>
+
+                            {/* WhatsApp Option */}
+                            <a
+                                href={typeof window !== 'undefined' ? `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                                    `Bonjour, Voici le lien pour consulter et signer en ligne votre contrat de prestation pour l'événement "${event.title}" : ${window.location.origin}/share/${event.share_token}`
+                                )}` : '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-4 p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors text-left"
+                            >
+                                <span className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0 text-lg">
+                                    💬
+                                </span>
+                                <div>
+                                    <h4 className="text-xs font-black text-white">Partager sur WhatsApp</h4>
+                                    <p className="text-[10px] text-muted font-medium mt-0.5">Envoie une invitation rapide via WhatsApp.</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        {/* Preview Button */}
+                        <a
+                            href={`/share/${event.share_token}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full h-12 rounded-2xl border border-white/10 hover:border-white/20 hover:bg-white/5 flex items-center justify-center gap-2 text-xs font-bold text-white transition-all"
+                        >
+                            👁️ Prévisualiser la page de signature
+                        </a>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }

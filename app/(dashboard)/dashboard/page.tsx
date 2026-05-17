@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Search, Calendar, Flag, CheckSquare, Users, Phone, FileText, ChevronRight, MapPin } from 'lucide-react';
+import { Search, Calendar, Flag, CheckSquare, Users, Phone, FileText, ChevronRight, MapPin, BarChart3 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { useUser } from '@/lib/hooks/useUser';
 import TeamSetup from '@/components/layout/TeamSetup';
@@ -22,7 +22,8 @@ export default function DashboardPage() {
                 .from('events')
                 .select('*')
                 .eq('team_id', profile.team_id as string)
-                .order('date_start', { ascending: false })
+                .neq('status', 'non_valide')
+                .order('date_start', { ascending: true })
                 .limit(5);
 
             if (!error && data) {
@@ -49,6 +50,7 @@ export default function DashboardPage() {
         { icon: Users, label: 'Fournisseurs', color: 'bg-orange-500/10 text-orange-500', href: '/dashboard/suppliers' },
         { icon: Phone, label: 'Contacts', color: 'bg-cyan-500/10 text-cyan-500', href: '/dashboard/contacts' },
         { icon: FileText, label: 'Docs & fichiers', color: 'bg-pink-500/10 text-pink-500', href: '/dashboard/files' },
+        { icon: BarChart3, label: 'Statistiques', color: 'bg-yellow-500/10 text-yellow-500', href: '/dashboard/statistics' },
     ];
 
     return (
@@ -61,16 +63,20 @@ export default function DashboardPage() {
                     </h1>
                     <p className="text-muted text-sm font-semibold opacity-60">Voici ce qui se passe aujourd'hui.</p>
                 </div>
-                <button className="w-12 h-12 rounded-2xl glass border border-white/10 flex items-center justify-center text-muted hover:text-white transition-all active:scale-90">
+                <Link 
+                    href="/dashboard/events?search=true"
+                    className="w-12 h-12 rounded-2xl glass border border-white/10 flex items-center justify-center text-muted hover:text-white transition-all active:scale-90"
+                    title="Rechercher des événements"
+                >
                     <Search size={22} />
-                </button>
+                </Link>
             </header>
 
             {/* Featured Event Card (En ce moment) */}
             <section className="mb-12">
                 <div className="flex items-center gap-2 mb-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted">
                     <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
-                    Dernier projet
+                    Prochain événement
                 </div>
                 
                 {latestEvent ? (
@@ -145,7 +151,7 @@ export default function DashboardPage() {
             {/* My Events List */}
             <section>
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-black uppercase tracking-wider opacity-40">Mes événements</h3>
+                    <h3 className="text-sm font-black uppercase tracking-wider opacity-40">Prochains événements</h3>
                     <Link href="/dashboard/events" className="text-purple-400 text-xs font-black hover:tracking-widest transition-all">
                         VOIR TOUT
                     </Link>

@@ -69,6 +69,9 @@ export default function EventForm({ eventId }: EventFormProps) {
     const [fetchingEvent, setFetchingEvent] = useState(!!eventId);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
+    const [customTypes, setCustomTypes] = useState<string[]>([]);
+    const [isCustomType, setIsCustomType] = useState(false);
+
     const {
         register,
         handleSubmit,
@@ -91,6 +94,39 @@ export default function EventForm({ eventId }: EventFormProps) {
     const droitImage = useWatch({ control, name: 'droit_image' });
     const resteAPayer = ((montantTotal ?? 0) - (acompte ?? 0)).toFixed(2);
 
+    const selectedType = useWatch({ control, name: 'type' });
+
+    useEffect(() => {
+        if (selectedType === '__custom__') {
+            setIsCustomType(true);
+            setValue('type', '');
+        }
+    }, [selectedType, setValue]);
+
+    // Fetch existing custom types from team events
+    useEffect(() => {
+        if (!profile?.team_id) return;
+        
+        const supabase = createClient();
+        (supabase as any)
+            .from('events')
+            .select('type')
+            .eq('team_id', profile.team_id)
+            .then(({ data, error }: { data: any, error: any }) => {
+                if (!error && data) {
+                    const types = data
+                        .map((e: any) => e.type)
+                        .filter(Boolean) as string[];
+                    
+                    const standardValues = ['Mariage', 'Anniversaire', 'Soirée entreprise', 'Conférence', 'Autre'];
+                    const uniqueCustom = Array.from(new Set(types))
+                        .filter(t => !standardValues.includes(t));
+                    
+                    setCustomTypes(uniqueCustom);
+                }
+            });
+    }, [profile?.team_id]);
+
     useEffect(() => {
         if (!eventId) return;
 
@@ -102,12 +138,33 @@ export default function EventForm({ eventId }: EventFormProps) {
             .single()
             .then(({ data, error }: { data: any, error: any }) => {
                 if (!error && data) {
+                    const standardValues = ['Mariage', 'Anniversaire', 'Soirée entreprise', 'Conférence', 'Autre'];
+                    if (data.type && !standardValues.includes(data.type)) {
+                        setCustomTypes(prev => Array.from(new Set([...prev, data.type])));
+                    }
+
+                    let dateVal = '';
+                    let timeVal = '';
+                    if (data.date_start) {
+                        const d = new Date(data.date_start);
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        dateVal = `${y}-${m}-${day}`;
+                        
+                        const hours = d.getHours();
+                        const minutes = d.getMinutes();
+                        if (hours !== 0 || minutes !== 0) {
+                            timeVal = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        }
+                    }
+
                     reset({
                         title: data.title,
-                        date_start: data.date_start ?? '',
-                        date_end: data.date_end ?? '',
+                        event_date: dateVal,
+                        event_time: timeVal,
                         location: data.location ?? '',
-                        type: (data.type as EventFormValues['type']) ?? undefined,
+                        type: data.type ?? '',
                         status: data.status,
                         client_monsieur_nom: data.client_monsieur_nom ?? '',
                         client_monsieur_prenom: data.client_monsieur_prenom ?? '',
@@ -133,6 +190,13 @@ export default function EventForm({ eventId }: EventFormProps) {
             });
     }, [eventId, reset]);
 
+    const selectOptions = [
+        ...EVENT_TYPES.filter(t => t.value !== 'Autre'),
+        ...customTypes.map(t => ({ value: t, label: `📅 ${t}` })),
+        { value: 'Autre', label: '📅 Autre' },
+        { value: '__custom__', label: '➕ Créer un type personnalisé...' }
+    ];
+
     const onSubmit = async (values: EventFormValues) => {
         if (!profile?.id) {
             setSubmitError("Votre profil n'a pas pu être chargé. Veuillez rafraîchir la page ou vous reconnecter.");
@@ -147,10 +211,20 @@ export default function EventForm({ eventId }: EventFormProps) {
         setSubmitError(null);
 
         const supabase = createClient();
+
+        let combinedDateStart = null;
+        if (values.event_date) {
+            if (values.event_time) {
+                combinedDateStart = `${values.event_date}T${values.event_time}:00`;
+            } else {
+                combinedDateStart = `${values.event_date}T00:00:00`;
+            }
+        }
+
         const payload = {
             title: values.title,
-            date_start: values.date_start || null,
-            date_end: values.date_end || null,
+            date_start: combinedDateStart,
+            date_end: null,
             location: values.location || null,
             type: values.type || null,
             status: values.status,
@@ -296,14 +370,14 @@ export default function EventForm({ eventId }: EventFormProps) {
                         />
                     </div>
                     <FormInput
-                        label="Date de début"
-                        registration={register('date_start')}
-                        type="datetime-local"
+                        label="Date de l'événement"
+                        registration={register('event_date')}
+                        type="date"
                     />
                     <FormInput
-                        label="Date de fin"
-                        registration={register('date_end')}
-                        type="datetime-local"
+                        label="Heure de l'événement (optionnel)"
+                        registration={register('event_time')}
+                        type="time"
                     />
                     <div className="sm:col-span-2">
                         <FormInput
@@ -312,12 +386,44 @@ export default function EventForm({ eventId }: EventFormProps) {
                             placeholder="Ex : Domaine de la Pinède, Marseille"
                         />
                     </div>
-                    <FormSelect
-                        label="Type de prestation"
-                        registration={register('type')}
-                        options={EVENT_TYPES}
-                        placeholder="Sélectionner..."
-                    />
+                    {isCustomType ? (
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                                Type de prestation personnalisé
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
+                                    style={{
+                                        background: 'var(--bg-overlay)',
+                                        border: '1px solid var(--border)',
+                                        color: 'var(--text-primary)',
+                                    }}
+                                    placeholder="Ex : Gala de charité"
+                                    {...register('type')}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCustomType(false);
+                                        setValue('type', '');
+                                    }}
+                                    className="px-4 rounded-xl bg-surface border border-white/5 text-xs text-muted hover:text-white transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <FormSelect
+                            label="Type de prestation"
+                            registration={register('type')}
+                            options={selectOptions}
+                            placeholder="Sélectionner..."
+                        />
+                    )}
                     <FormSelect
                         label="Statut du projet"
                         registration={register('status')}
