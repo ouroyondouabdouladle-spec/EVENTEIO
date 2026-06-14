@@ -201,7 +201,14 @@ export default function ShareContractPage({ params }: SharePageProps) {
                     </div>
                     <div className="flex items-center justify-between p-3.5 rounded-2xl">
                         <span className="text-xs font-black uppercase tracking-wider text-muted">Acompte Versé</span>
-                        <span className="text-sm font-bold text-white text-green-400">{formatCurrency(event.acompte)}</span>
+                        <span className="text-sm font-bold text-white text-green-400">
+                            {formatCurrency(event.acompte)}
+                            {event.moyen_paiement_acompte && (
+                                <span className="text-xs text-muted ml-2 font-normal">
+                                    ({event.moyen_paiement_acompte === 'especes' ? 'Espèces' : event.moyen_paiement_acompte === 'virement' ? 'Virement' : 'PayPal'})
+                                </span>
+                            )}
+                        </span>
                     </div>
                     <div className="flex items-center justify-between p-3.5 rounded-2xl border-t border-white/5 pt-5 mt-2">
                         <span className="text-xs font-black uppercase tracking-wider text-white">Solde Restant</span>

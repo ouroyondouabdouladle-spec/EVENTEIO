@@ -33,6 +33,9 @@ interface UserContextValue {
   canViewStats: () => boolean;
   canViewNotes: () => boolean;
   canAccessSettings: () => boolean;
+  // Notifications
+  unreadCount: number;
+  refreshUnreadCount: () => Promise<void>;
 }
 
 // ================================================================
@@ -47,6 +50,8 @@ const UserContext = createContext<UserContextValue>({
   canViewStats: () => false,
   canViewNotes: () => false,
   canAccessSettings: () => false,
+  unreadCount: 0,
+  refreshUnreadCount: async () => {},
 });
 
 // ================================================================
@@ -56,8 +61,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const supabase = createClient();
+
+  const refreshUnreadCount = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select('id')
+        .order('created_at', { ascending: false })
+        .limit(40);
+
+      if (error) return;
+
+      let readIds: string[] = [];
+      let deletedIds: string[] = [];
+      if (typeof window !== 'undefined') {
+        try {
+          readIds = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+          deletedIds = JSON.parse(localStorage.getItem('deleted_notifications') || '[]');
+        } catch (e) {}
+      }
+
+      const activeLogs = (data || []).filter((log: any) => !deletedIds.includes(log.id));
+      const unread = activeLogs.filter((log: any) => !readIds.includes(log.id)).length;
+      setUnreadCount(unread);
+    } catch (e) {
+      console.error('Error fetching unread count:', e);
+    }
+  }, [supabase]);
 
   const fetchProfile = useCallback(async (userId: string, retryCount = 0) => {
     try {
@@ -75,6 +108,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           return;
         }
         console.error('Error fetching profile:', error);
+      } else {
+        refreshUnreadCount();
       }
       setProfile(data ?? null);
     } catch (err) {
@@ -122,6 +157,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     canViewStats: () => canViewStats(profile),
     canViewNotes: () => canViewNotes(profile),
     canAccessSettings: () => canAccessSettings(profile),
+    unreadCount,
+    refreshUnreadCount,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -25,6 +25,7 @@ export interface Profile {
     avatar_url: string | null;
     role: UserRole;
     team_id: string | null;
+    module_permissions: Record<string, boolean> | null;
     created_at: string;
 }
 
@@ -57,6 +58,7 @@ export interface Event {
     montant_total: number | null;
     acompte: number | null;
     statut_paiement: PaymentStatus;
+    moyen_paiement_acompte: string | null;
     droit_image: boolean;
     conditions_annulation: string | null;
     notes_internes: string | null;
@@ -152,6 +154,7 @@ export interface Database {
                     avatar_url?: string | null;
                     role?: UserRole;
                     team_id?: string | null;
+                    module_permissions?: Record<string, boolean> | null;
                     created_at?: string;
                 };
                 Update: Partial<Profile>;

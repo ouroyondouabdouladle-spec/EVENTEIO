@@ -33,6 +33,7 @@ export const eventSchema = z.object({
     montant_total: z.coerce.number().min(0).nullable().optional(),
     acompte: z.coerce.number().min(0).nullable().optional(),
     statut_paiement: z.enum(['non_paye', 'acompte_recu', 'paye']).default('non_paye'),
+    moyen_paiement_acompte: z.string().nullable().optional(),
 
     // ---- Section 5 : Droit à l'image ----
     droit_image: z.boolean().default(false),

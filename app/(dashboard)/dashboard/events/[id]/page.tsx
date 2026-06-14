@@ -73,7 +73,7 @@ export default function EventPage({ params }: EventPageProps) {
         <div className="min-h-screen pb-20" style={{ background: 'var(--bg-base)' }}>
             <EventHeader event={event} isAdmin={profile?.role === 'admin'} />
 
-            <div className="max-w-md mx-auto px-4 md:max-w-2xl">
+        <div className="max-w-md mx-auto px-4 md:max-w-4xl xl:max-w-6xl">
                 {/* Navigation Tabs */}
                 <nav className="flex items-center gap-6 mb-6 overflow-x-auto no-scrollbar border-b" style={{ borderColor: 'var(--border)' }}>
                     {TABS.map((tab) => (
@@ -105,7 +105,7 @@ export default function EventPage({ params }: EventPageProps) {
 
                 {/* Footer History */}
                 <ActivityHistory eventId={event.id} />
-            </div>
+        </div>
         </div>
     );
 }

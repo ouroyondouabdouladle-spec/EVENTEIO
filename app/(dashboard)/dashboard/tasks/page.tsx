@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useUser } from '@/lib/hooks/useUser';
 import type { Task, Event, TaskPriority } from '@/types/database';
-import { Check, Calendar, ChevronRight, AlertCircle, Search, Flag, Clock } from 'lucide-react';
+import { Check, Calendar, ChevronRight, AlertCircle, Search, Flag, Clock, CheckSquare, Circle, Loader } from 'lucide-react';
 import Link from 'next/link';
 
 const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; bg: string }> = {
@@ -67,14 +67,53 @@ export default function GlobalTasksPage() {
         }).format(new Date(iso));
     };
 
-    if (loading) return <div className="py-20 text-center animate-pulse text-muted">Chargement de toutes vos tâches...</div>;
+    if (loading) return (
+        <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
+            <p className="text-sm font-semibold animate-pulse">Chargement de toutes vos tâches...</p>
+        </div>
+    );
+
+    const total = filteredTasks.length;
+    const done = filteredTasks.filter(t => t.status === 'termine').length;
+    const inProgress = filteredTasks.filter(t => t.status === 'en_cours').length;
+    const todo = filteredTasks.filter(t => t.status === 'a_faire').length;
+    const ratio = total > 0 ? Math.round((done / total) * 100) : 0;
 
     return (
-        <main className="p-6 animate-fade-in max-w-md mx-auto md:max-w-2xl pb-32">
-            <header className="mb-10">
-                <h1 className="text-3xl font-black tracking-tight mb-2">Toutes les tâches</h1>
+        <main className="p-6 animate-fade-in max-w-md mx-auto md:max-w-none pb-32">
+            <header className="mb-8">
+                <h1 className="text-3xl font-black tracking-tight mb-1">Toutes les tâches</h1>
                 <p className="text-muted text-sm font-semibold opacity-60">Suivez l'avancement de tous vos projets.</p>
             </header>
+
+            {/* Stats Banner */}
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {[
+                    { label: 'Total', value: total, color: 'text-white', bg: 'from-white/5' },
+                    { label: 'À faire', value: todo, color: 'text-orange-400', bg: 'from-orange-500/10' },
+                    { label: 'En cours', value: inProgress, color: 'text-blue-400', bg: 'from-blue-500/10' },
+                    { label: 'Terminées', value: done, color: 'text-green-400', bg: 'from-green-500/10' },
+                ].map(s => (
+                    <div key={s.label} className={`card-premium p-4 bg-gradient-to-br ${s.bg} to-transparent`}>
+                        <span className={`text-2xl font-black block ${s.color}`}>{s.value}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted mt-1 block">{s.label}</span>
+                    </div>
+                ))}
+            </section>
+
+            {/* Progress bar */}
+            {total > 0 && (
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-muted">Progression globale</span>
+                        <span className="text-xs font-black text-primary">{ratio}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700" style={{ width: `${ratio}%` }} />
+                    </div>
+                </div>
+            )}
 
             <div className="relative mb-8">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
@@ -87,7 +126,7 @@ export default function GlobalTasksPage() {
                 />
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredTasks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="w-16 h-16 rounded-full bg-surface border border-white/5 flex items-center justify-center text-muted mb-4">

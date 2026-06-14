@@ -34,6 +34,12 @@ const PAYMENT_STATUSES = [
     { value: 'paye', label: '✅ Payé' },
 ];
 
+const DEPOSIT_PAYMENT_METHODS = [
+    { value: 'especes', label: '💵 Espèces' },
+    { value: 'virement', label: '🏦 Virement' },
+    { value: 'paypal', label: '💳 PayPal' },
+];
+
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
     return (
         <button
@@ -84,6 +90,7 @@ export default function EventForm({ eventId }: EventFormProps) {
         defaultValues: {
             status: 'non_valide',
             statut_paiement: 'non_paye',
+            moyen_paiement_acompte: '',
             droit_image: false,
         },
         mode: 'onChange'
@@ -91,6 +98,7 @@ export default function EventForm({ eventId }: EventFormProps) {
 
     const montantTotal = useWatch({ control, name: 'montant_total' });
     const acompte = useWatch({ control, name: 'acompte' });
+    const statutPaiement = useWatch({ control, name: 'statut_paiement' });
     const droitImage = useWatch({ control, name: 'droit_image' });
     const resteAPayer = ((montantTotal ?? 0) - (acompte ?? 0)).toFixed(2);
 
@@ -181,6 +189,7 @@ export default function EventForm({ eventId }: EventFormProps) {
                         montant_total: data.montant_total ?? undefined,
                         acompte: data.acompte ?? undefined,
                         statut_paiement: data.statut_paiement,
+                        moyen_paiement_acompte: data.moyen_paiement_acompte ?? '',
                         droit_image: data.droit_image,
                         conditions_annulation: data.conditions_annulation ?? '',
                         notes_internes: data.notes_internes ?? '',
@@ -243,6 +252,9 @@ export default function EventForm({ eventId }: EventFormProps) {
             montant_total: values.montant_total ?? null,
             acompte: values.acompte ?? null,
             statut_paiement: values.statut_paiement,
+            moyen_paiement_acompte: (values.statut_paiement === 'acompte_recu' || values.statut_paiement === 'paye')
+                ? (values.moyen_paiement_acompte || null)
+                : null,
             droit_image: values.droit_image,
             conditions_annulation: values.conditions_annulation || null,
             notes_internes: values.notes_internes || null,
@@ -484,6 +496,14 @@ export default function EventForm({ eventId }: EventFormProps) {
                         registration={register('statut_paiement')}
                         options={PAYMENT_STATUSES}
                     />
+                    {(statutPaiement === 'acompte_recu' || statutPaiement === 'paye') && (
+                        <FormSelect
+                            label="Moyen de règlement de l'acompte"
+                            registration={register('moyen_paiement_acompte')}
+                            options={DEPOSIT_PAYMENT_METHODS}
+                            placeholder="Choisir le moyen de règlement..."
+                        />
+                    )}
                 </FormSection>
 
                 {/* SECTION 5 : Logistique & Notes */}

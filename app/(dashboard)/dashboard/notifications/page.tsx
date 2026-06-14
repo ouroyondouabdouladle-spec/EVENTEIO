@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Trash2, Calendar, FileText, CheckCircle, PlusCircle, Users, Trash } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
+import { useUser } from '@/lib/hooks/useUser';
 
 interface NotificationItem {
     id: string;
@@ -16,6 +17,7 @@ interface NotificationItem {
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const { refreshUnreadCount } = useUser();
 
     const fetchNotifications = async () => {
         const supabase = createClient();
@@ -127,6 +129,7 @@ export default function NotificationsPage() {
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, isRead: true } : n)
         );
+        refreshUnreadCount();
     };
 
     const handleDelete = (id: string, e: React.MouseEvent) => {
@@ -144,6 +147,7 @@ export default function NotificationsPage() {
         }
 
         setNotifications(prev => prev.filter(n => n.id !== id));
+        refreshUnreadCount();
     };
 
     const handleClearAll = () => {
@@ -158,6 +162,7 @@ export default function NotificationsPage() {
             }
         }
         setNotifications([]);
+        refreshUnreadCount();
     };
 
     const handleMarkAllRead = () => {
@@ -172,6 +177,7 @@ export default function NotificationsPage() {
             }
         }
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        refreshUnreadCount();
     };
 
     const unreadCount = notifications.filter(n => !n.isRead).length;

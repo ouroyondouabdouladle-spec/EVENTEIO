@@ -4,9 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Calendar, Plus, Bell, User } from 'lucide-react';
+import { useUser } from '@/lib/hooks/useUser';
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const { unreadCount } = useUser();
 
     const navItems = [
         { icon: Home, label: 'Accueil', href: '/dashboard' },
@@ -42,11 +44,14 @@ export default function BottomNav() {
                         <Link
                             key={index}
                             href={item.href}
-                            className={`flex flex-col items-center gap-1 transition-all ${
+                            className={`flex flex-col items-center gap-1 transition-all relative ${
                                 isActive ? 'text-primary' : 'text-muted hover:text-white'
                             }`}
                         >
                             <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                            {item.icon === Bell && unreadCount > 0 && (
+                                <span className="absolute top-0 right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background" />
+                            )}
                         </Link>
                     );
                 })}

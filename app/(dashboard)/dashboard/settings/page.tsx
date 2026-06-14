@@ -14,6 +14,16 @@ export default function SettingsPage() {
     const [members, setMembers] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [expandedMember, setExpandedMember] = useState<string | null>(null);
+
+    const modules = [
+        { id: 'events', label: 'Événements', icon: '🗓️' },
+        { id: 'calendar', label: 'Calendrier', icon: '📅' },
+        { id: 'tasks', label: 'Tâches', icon: '✅' },
+        { id: 'suppliers', label: 'Fournisseurs', icon: '🤝' },
+        { id: 'contacts', label: 'Contacts', icon: '👥' },
+        { id: 'files', label: 'Fichiers', icon: '📁' },
+    ];
 
     const supabase = createClient();
     const isAdmin = profile?.role === 'admin';
@@ -97,6 +107,31 @@ export default function SettingsPage() {
         }
     };
 
+    const handleToggleModule = async (memberId: string, moduleId: string, currentVal: boolean) => {
+        try {
+            const member = members.find(m => m.id === memberId);
+            if (!member) return;
+
+            const newPermissions = {
+                ...(member.module_permissions || {}),
+                [moduleId]: !currentVal
+            };
+
+            const { error } = await (supabase as any)
+                .from('profiles')
+                .update({ module_permissions: newPermissions })
+                .eq('id', memberId);
+
+            if (error) throw error;
+
+            // Mettre à jour la liste locale
+            setMembers(prev => prev.map(m => m.id === memberId ? { ...m, module_permissions: newPermissions } : m));
+        } catch (error) {
+            console.error("Erreur lors de la modification des permissions de module", error);
+            alert("Erreur lors de la modification de l'accès au module.");
+        }
+    };
+
     if (loading) return null;
 
     return (
@@ -154,8 +189,9 @@ export default function SettingsPage() {
                     </h3>
                     <div className="space-y-3">
                         {members.map(member => (
-                            <div key={member.id} className="card-premium p-4 flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full overflow-hidden bg-surface border border-white/10 flex-shrink-0">
+                            <React.Fragment key={member.id}>
+                                <div className="card-premium p-4 flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full overflow-hidden bg-surface border border-white/10 flex-shrink-0">
                                     {member.avatar_url ? (
                                         <img src={member.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
@@ -175,7 +211,13 @@ export default function SettingsPage() {
                                 
                                 {/* Sélecteur de rôle et bouton Kick (Admin Seulement) */}
                                 {isAdmin && member.id !== profile?.id ? (
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setExpandedMember(expandedMember === member.id ? null : member.id)}
+                                            className="text-[10px] uppercase font-bold text-primary hover:bg-primary/10 px-3 py-2 rounded-lg transition-colors"
+                                        >
+                                            {expandedMember === member.id ? 'Fermer' : 'Gérer les accès'}
+                                        </button>
                                         <select
                                             value={member.role}
                                             onChange={(e) => handleChangeRole(member.id, e.target.value as UserRole)}
@@ -200,6 +242,30 @@ export default function SettingsPage() {
                                     )
                                 )}
                             </div>
+                            
+                            {/* Panneau de permissions (étendu) */}
+                            {isAdmin && member.id !== profile?.id && expandedMember === member.id && (
+                                <div className="mt-2 ml-16 mr-4 mb-4 p-4 rounded-xl bg-background border border-white/5 space-y-3">
+                                    <h4 className="text-xs font-bold text-muted mb-2">Accès aux modules</h4>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {modules.map(mod => {
+                                            const hasAccess = member.module_permissions ? member.module_permissions[mod.id] !== false : true;
+                                            return (
+                                                <label key={mod.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-surface transition-colors">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={hasAccess}
+                                                        onChange={() => handleToggleModule(member.id, mod.id, hasAccess)}
+                                                        className="w-4 h-4 rounded text-primary bg-surface border-white/20 focus:ring-primary focus:ring-offset-background"
+                                                    />
+                                                    <span className="text-xs font-medium text-white">{mod.icon} {mod.label}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </React.Fragment>
                         ))}
                     </div>
                 </section>

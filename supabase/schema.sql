@@ -60,6 +60,7 @@ CREATE TABLE public.events (
     montant_total NUMERIC,
     acompte NUMERIC,
     statut_paiement payment_status DEFAULT 'non_paye'::payment_status,
+    moyen_paiement_acompte TEXT,
     droit_image BOOLEAN DEFAULT false,
     conditions_annulation TEXT,
     notes_internes TEXT,

@@ -279,7 +279,10 @@ export function generateEventPDF(event: Event) {
                     </div>
                     <div class="data-row">
                         <span class="label">Acompte Réglé</span>
-                        <span class="value">${event.acompte ? event.acompte.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) : '0,00 €'}</span>
+                        <span class="value">
+                            ${event.acompte ? event.acompte.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) : '0,00 €'}
+                            ${event.moyen_paiement_acompte ? ` (${event.moyen_paiement_acompte === 'especes' ? 'Espèces' : event.moyen_paiement_acompte === 'virement' ? 'Virement' : 'PayPal'})` : ''}
+                        </span>
                     </div>
                     <div class="data-row">
                         <span class="label">Solde Restant</span>

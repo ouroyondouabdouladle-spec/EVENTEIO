@@ -85,9 +85,9 @@ export default function GlobalSuppliersPage() {
     if (loading) return <div className="py-20 text-center animate-pulse text-muted">Chargement des prestataires...</div>;
 
     return (
-        <main className="p-6 animate-fade-in max-w-md mx-auto md:max-w-2xl pb-32">
-            <header className="mb-10">
-                <h1 className="text-3xl font-black tracking-tight mb-2">Prestataires</h1>
+        <main className="p-6 animate-fade-in max-w-md mx-auto md:max-w-none pb-32">
+            <header className="mb-8">
+                <h1 className="text-3xl font-black tracking-tight mb-1">Prestataires</h1>
                 <p className="text-muted text-sm font-semibold opacity-60">Tous vos partenaires événementiels.</p>
             </header>
 
@@ -102,7 +102,7 @@ export default function GlobalSuppliersPage() {
                 />
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredSuppliers.length === 0 ? (
                     <div className="text-center py-20 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10">
                         <p className="text-sm text-muted font-bold opacity-60">Aucun prestataire trouvé.</p>
