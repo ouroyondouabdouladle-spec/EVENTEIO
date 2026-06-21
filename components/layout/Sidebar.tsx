@@ -16,10 +16,11 @@ import {
     LogOut,
     Zap,
     ChevronRight,
+    TrendingUp,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { useUser } from '@/lib/hooks/useUser';
-import { canViewEvents, canViewCalendar, canViewTasks, canViewSuppliers, canViewContacts, canViewFiles } from '@/lib/permissions';
+import { canViewEvents, canViewCalendar, canViewTasks, canViewSuppliers, canViewContacts, canViewFiles, canViewStats } from '@/lib/permissions';
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
@@ -34,6 +35,7 @@ export default function Sidebar() {
         { icon: Users, label: 'Fournisseurs', href: '/dashboard/suppliers', perm: canViewSuppliers },
         { icon: Phone, label: 'Contacts', href: '/dashboard/contacts', perm: canViewContacts },
         { icon: FolderOpen, label: 'Documents & fichiers', href: '/dashboard/files', perm: canViewFiles },
+        { icon: TrendingUp, label: 'Statistiques', href: '/dashboard/statistics', perm: canViewStats },
     ].filter(item => item.perm(profile));
 
     const handleSignOut = async () => {

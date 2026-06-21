@@ -146,29 +146,32 @@ export default function DashboardPage() {
             const supabase = createClient();
 
             // 1. Next Event (upcoming or today)
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
+            const nowStr = new Date().toISOString();
             const { data: nextEventData } = await (supabase as any)
                 .from('events')
                 .select('*')
                 .eq('team_id', profile.team_id as string)
                 .neq('status', 'non_valide')
                 .neq('status', 'termine')
-                .gte('date_start', todayStart.toISOString())
+                .gte('date_start', nowStr)
                 .order('date_start', { ascending: true })
                 .limit(1)
                 .maybeSingle();
 
             setNextEvent(nextEventData as Event || null);
 
-            // 2. Events List (up to 50 for robust client filtering)
+            // 2. Events List (up to 100 starting from 30 days ago to prevent old events cut-off)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
             const { data: eventsData } = await (supabase as any)
                 .from('events')
                 .select('*')
                 .eq('team_id', profile.team_id as string)
                 .neq('status', 'non_valide')
+                .gte('date_start', thirtyDaysAgo.toISOString())
                 .order('date_start', { ascending: true })
-                .limit(50);
+                .limit(100);
 
             const evList = (eventsData as Event[]) || [];
             setEvents(evList);
@@ -214,6 +217,13 @@ export default function DashboardPage() {
     if (profile && !profile.team_id) return <TeamSetup />;
 
     const latestEvent = nextEvent;
+
+    // Filter upcoming events (exclude past events and non-validated/finished)
+    const upcomingEvents = events.filter(e => {
+        if (e.status === 'termine' || e.status === 'non_valide') return false;
+        if (!e.date_start) return false;
+        return new Date(e.date_start) >= new Date();
+    });
 
     const filteredEvents = eventFilter === 'all'
         ? events
@@ -308,7 +318,7 @@ export default function DashboardPage() {
                         <Link href="/dashboard/events" className="text-purple-400 text-xs font-black">VOIR TOUT</Link>
                     </div>
                     <div className="space-y-3">
-                        {events.map(ev => (
+                        {upcomingEvents.map(ev => (
                             <Link key={ev.id} href={`/dashboard/events/${ev.id}`} className="block group">
                                 <div className="card-premium p-4 flex items-center gap-4 group-hover:border-white/20 transition-all">
                                     <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
@@ -324,6 +334,9 @@ export default function DashboardPage() {
                                 </div>
                             </Link>
                         ))}
+                        {upcomingEvents.length === 0 && (
+                            <p className="text-xs text-muted text-center py-4">Aucun événement à venir</p>
+                        )}
                     </div>
                 </section>
             </main>
@@ -387,7 +400,7 @@ export default function DashboardPage() {
                                 <span className="db-section-title">Mes événements</span>
                                 <Link href="/dashboard/events" className="db-see-all">Voir tout</Link>
                             </div>
-                            {events.slice(0, 3).map(ev => (
+                            {upcomingEvents.slice(0, 3).map(ev => (
                                 <Link key={ev.id} href={`/dashboard/events/${ev.id}`} className="db-event-row group">
                                     <div className="db-event-thumb">
                                         <Calendar size={18} className="text-purple-400" />
@@ -407,8 +420,8 @@ export default function DashboardPage() {
                                     </span>
                                 </Link>
                             ))}
-                            {events.length === 0 && (
-                                <p className="db-empty-text">Aucun événement.</p>
+                            {upcomingEvents.length === 0 && (
+                                <p className="db-empty-text">Aucun événement à venir.</p>
                             )}
                         </div>
                         )}

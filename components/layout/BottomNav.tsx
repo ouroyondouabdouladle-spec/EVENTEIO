@@ -3,16 +3,18 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar, Plus, Bell, User } from 'lucide-react';
+import { Home, Calendar, Plus, Bell, User, TrendingUp } from 'lucide-react';
 import { useUser } from '@/lib/hooks/useUser';
+import { canViewStats } from '@/lib/permissions';
 
 export default function BottomNav() {
     const pathname = usePathname();
-    const { unreadCount } = useUser();
+    const { profile, unreadCount } = useUser();
 
     const navItems = [
         { icon: Home, label: 'Accueil', href: '/dashboard' },
         { icon: Calendar, label: 'Calendrier', href: '/dashboard/calendar' },
+        ...(canViewStats(profile) ? [{ icon: TrendingUp, label: 'Statistiques', href: '/dashboard/statistics' }] : []),
         { icon: Plus, label: 'Add', href: '/dashboard/events/new', isCenter: true },
         { icon: Bell, label: 'Notifications', href: '/dashboard/notifications' },
         { icon: User, label: 'Profil', href: '/dashboard/profile' },
