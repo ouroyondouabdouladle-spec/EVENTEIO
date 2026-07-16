@@ -74,6 +74,9 @@ export default function SignaturePad({ onSave, placeholder }: SignaturePadProps)
     };
 
     const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        if ('touches' in e && e.cancelable) {
+            e.preventDefault();
+        }
         const coords = getCoordinates(e);
         if (!coords) return;
 
@@ -89,6 +92,9 @@ export default function SignaturePad({ onSave, placeholder }: SignaturePadProps)
     };
 
     const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        if ('touches' in e && e.cancelable) {
+            e.preventDefault();
+        }
         if (!isDrawing) return;
 
         const coords = getCoordinates(e);
@@ -141,7 +147,8 @@ export default function SignaturePad({ onSave, placeholder }: SignaturePadProps)
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    className="absolute inset-0 w-full h-full"
+                    className="absolute inset-0 w-full h-full touch-none"
+                    style={{ touchAction: 'none' }}
                 />
                 {!hasSigned && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-muted text-xs font-semibold select-none group-hover:opacity-40 transition-opacity">
