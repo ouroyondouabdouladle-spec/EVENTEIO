@@ -28,8 +28,9 @@ export async function middleware(request: NextRequest) {
         }
     );
 
-    // Rafraîchit la session si elle a expiré
-    const { data: { user } } = await supabase.auth.getUser();
+    // Lit la session depuis le cookie JWT (sans appel réseau → évite le timeout)
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
 
     const pathname = request.nextUrl.pathname;
     const publicPaths = ['/login', '/register', '/forgot-password'];
